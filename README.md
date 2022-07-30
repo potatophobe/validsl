@@ -121,7 +121,7 @@ validate(value) {
 ```
 
 If value not equal to `"something"` `fail` block will execute.
-Inside fail block you have access to `value` property that contains actual validated value,
+Inside `fail` block you have access to `value` property that contains actual validated value,
 and `faults` property that is list of validation faults with 3 properties:
 `path` - path to property, which failed validation,
 `description` - constraint description you defined above,
@@ -205,7 +205,7 @@ data class Something(
 val value: Something // assignment
 
 validate(value) {
-    properties {
+    properties { // object properties validation definition
         validate(Something::property) {
             value {
                 isEqualTo("something")
@@ -231,7 +231,7 @@ val value: Something // assignment
 validate(value) {
     properties {
         validate(Something::properties) {
-            elements {
+            elements { // object elements validation definition
                 value {
                     isEqualTo("something")
                 }
@@ -257,12 +257,12 @@ val value: Something // assignment
 validate(value) {
     properties {
         validate(Something::propertiesMap) {
-            keys {
+            keys { // object keys validation definition
                 value {
                     isEqualTo("something")
                 }
             }
-            values {
+            values { // object values validation definition
                 value {
                     isEqualTo("something else")
                 }
