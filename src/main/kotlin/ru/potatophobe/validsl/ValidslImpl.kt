@@ -9,9 +9,6 @@ import kotlin.reflect.KProperty1
  * @param validateBlock validation definition
  *
  * @return result of validation
- *
- * @see ValidateScope
- * @see ValidationResult
  * */
 @Validsl
 fun <T> validate(value: T, validateBlock: ValidateScope<T>.() -> Unit): ValidationResult<T> {
@@ -48,10 +45,13 @@ internal class ValidateScopeImpl<T>(
     private val value: T,
     private val path: String
 ) : ValidateScope<T> {
-    private val propertiesScope: PropertiesScope<T> by lazy { PropertiesScopeImpl(value, path) }
     private val valueScope: ValueScope<T> by lazy { ValueScopeImpl(value, path) }
+    private val propertiesScope: PropertiesScope<T> by lazy { PropertiesScopeImpl(value, path) }
     private val elementsScopes: List<ValidateScope<*>> by lazy {
         (value as Iterable<*>?)?.mapIndexed { i, e -> ValidateScopeImpl(e, "$path[$i]") } ?: listOf()
+    }
+    private val entriesScopes: List<ValidateScope<Map.Entry<*, *>>> by lazy {
+        (value as Map<*, *>?)?.entries?.mapIndexed { i, e -> ValidateScopeImpl(e, "$path.entries[$i]") } ?: listOf()
     }
     private val keysScopes: List<ValidateScope<*>> by lazy {
         (value as Map<*, *>?)?.keys?.mapIndexed { i, e -> ValidateScopeImpl(e, "$path.keys[$i]") } ?: listOf()
@@ -60,12 +60,12 @@ internal class ValidateScopeImpl<T>(
         (value as Map<*, *>?)?.map { (i, e) -> ValidateScopeImpl(e, "$path[$i]") } ?: listOf()
     }
 
-    override fun properties(propertiesBlock: PropertiesScope<T>.() -> Unit) {
-        propertiesScope.apply(propertiesBlock)
-    }
-
     override fun value(valueBlock: ValueScope<T>.() -> Unit) {
         valueScope.apply(valueBlock)
+    }
+
+    override fun properties(propertiesBlock: PropertiesScope<T>.() -> Unit) {
+        propertiesScope.apply(propertiesBlock)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -74,13 +74,18 @@ internal class ValidateScopeImpl<T>(
     }
 
     @Suppress("UNCHECKED_CAST")
+    override fun <K, V> ValidateScope<out Map<K, V>?>.entries(entriesBlock: ValidateScope<Map.Entry<K, V>>.() -> Unit) {
+        this@ValidateScopeImpl.entriesScopes.forEach { it.apply(entriesBlock as ValidateScope<Map.Entry<*, *>>.() -> Unit) }
+    }
+
+    @Suppress("UNCHECKED_CAST")
     override fun <K> ValidateScope<out Map<K, *>?>.keys(keysBlock: ValidateScope<K>.() -> Unit) {
         this@ValidateScopeImpl.keysScopes.forEach { it.apply(keysBlock as ValidateScope<*>.() -> Unit) }
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun <V> ValidateScope<out Map<*, V>?>.values(valueBlock: ValidateScope<V>.() -> Unit) {
-        this@ValidateScopeImpl.valuesScopes.forEach { it.apply(valueBlock as ValidateScope<*>.() -> Unit) }
+    override fun <V> ValidateScope<out Map<*, V>?>.values(valuesBlock: ValidateScope<V>.() -> Unit) {
+        this@ValidateScopeImpl.valuesScopes.forEach { it.apply(valuesBlock as ValidateScope<*>.() -> Unit) }
     }
 
     override fun apply(): ValidationResult<T> {
@@ -91,6 +96,7 @@ internal class ValidateScopeImpl<T>(
             if (value is Map<*, *>) {
                 addAll(keysScopes.map { it.apply() })
                 addAll(valuesScopes.map { it.apply() })
+                addAll(entriesScopes.map { it.apply() })
             }
         }.flatMap { it.faults }.let { ValidationResultImpl(value, it) }
     }
