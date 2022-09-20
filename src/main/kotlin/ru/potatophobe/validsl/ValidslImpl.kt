@@ -1,5 +1,6 @@
 package ru.potatophobe.validsl
 
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 /**
@@ -11,8 +12,23 @@ import kotlin.reflect.KProperty1
  * @return result of validation
  * */
 @Validsl
-fun <T> validate(value: T, validateBlock: ValidateScope<T>.() -> Unit): ValidationResult<T> {
-    return validation(validateBlock).applyTo(value, "this")
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T> validate(value: T, noinline validateBlock: ValidateScope<T>.() -> Unit): ValidationResult<T> {
+    return validate(value, T::class as KClass<T & Any>, validateBlock)
+}
+
+/**
+ * Validate given value
+ *
+ * @param value value to validate
+ * @param type validated value type
+ * @param validateBlock validation definition
+ *
+ * @return result of validation
+ * */
+@Validsl
+fun <T> validate(value: T, type: KClass<T & Any>, validateBlock: ValidateScope<T>.() -> Unit): ValidationResult<T> {
+    return validation(validateBlock).applyTo(value, type.simpleName!!)
 }
 
 /**

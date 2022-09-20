@@ -1,6 +1,7 @@
 package ru.potatophobe.validsl
 
 import ru.potatophobe.validsl.util.writeToString
+import kotlin.reflect.KClass
 
 /**
  * Validate given value using cached validation
@@ -11,8 +12,23 @@ import ru.potatophobe.validsl.util.writeToString
  * @return result of validation
  * */
 @Validsl
-fun <T> validateCaching(value: T, validateBlock: ValidateScope<T>.() -> Unit): ValidationResult<T> {
-    return ValidslCache.cachedValidation(validateBlock).applyTo(value, "this")
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T> validateCaching(value: T, noinline validateBlock: ValidateScope<T>.() -> Unit): ValidationResult<T> {
+    return validateCaching(value, T::class as KClass<T & Any>, validateBlock)
+}
+
+/**
+ * Validate given value using cached validation
+ *
+ * @param value value to validate
+ * @param type validated value type
+ * @param validateBlock validation definition
+ *
+ * @return result of validation
+ * */
+@Validsl
+fun <T> validateCaching(value: T, type: KClass<T & Any>, validateBlock: ValidateScope<T>.() -> Unit): ValidationResult<T> {
+    return ValidslCache.cachedValidation(validateBlock).applyTo(value, type.simpleName!!)
 }
 
 internal object ValidslCache {
