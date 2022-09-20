@@ -16,14 +16,6 @@ package ru.potatophobe.validsl
 object MatchAlias
 
 /**
- * Utility function to support multiple aliases on one line
- *
- * Example: `{ notNull() and hasLength(10) }`
- * */
-@Validsl
-infix fun MatchAlias.and(matchAlias: MatchAlias) = matchAlias
-
-/**
  * Utility function to simplify alias definition
  * */
 fun <T> ValueScope<T>.matchAlias(matchBlock: ValueScope<T>.() -> Unit): MatchAlias {
@@ -31,6 +23,15 @@ fun <T> ValueScope<T>.matchAlias(matchBlock: ValueScope<T>.() -> Unit): MatchAli
     return MatchAlias
 }
 
+/**
+ * Utility function to support multiple aliases on one line
+ *
+ * Example: `{ notNull() and hasLength(10) }`
+ * */
+@Validsl
+infix fun MatchAlias.and(matchAlias: MatchAlias) = matchAlias
+
+/* Aliases */
 
 /**
  * Specifies that validated value must be null
@@ -64,6 +65,14 @@ fun <T> ValueScope<T>.isEqualTo(value: T & Any) = matchAlias {
 @Validsl
 fun <T> ValueScope<T>.isOneOf(vararg values: T & Any) = matchAlias {
     match { values.contains(it) } description "Must be one of $values"
+}
+
+/**
+ * Specifies that validated value must be in provided range if not null
+ * */
+@Validsl
+fun <T : Comparable<T>?> ValueScope<out T>.isInRange(range: ClosedRange<T & Any>) = matchAlias {
+    match { it?.let { range.contains(it) } ?: false } description "Must be in range $range"
 }
 
 /**
@@ -147,6 +156,14 @@ fun ValueScope<out Map<*, *>?>.isNotEmptyMap() = matchAlias {
 }
 
 /* Nullable matches */
+
+/**
+ * Specifies that validated value must not be equal to provided value
+ * */
+@Validsl
+fun <T> ValueScope<T>.notEqualTo(value: T & Any) = matchAlias {
+    match { it != value } description "Must not be equal to $value"
+}
 
 /**
  * Specifies that validated value must have length equal to `length` argument if not null
