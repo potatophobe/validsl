@@ -102,9 +102,12 @@ interface ApplicableValidation<T> {
     /**
      * Apply validation unit to validated value
      *
+     * @param value value to which validation will be applied
+     * @param path path to property containing this value
+     *
      * @return result of validation
      * */
-    fun apply(): ValidationResult<T>
+    fun applyTo(value: T, path: String): ValidationResult<T>
 }
 
 /**
