@@ -120,7 +120,7 @@ internal class ValidateScopeImpl<T> : ValidateScope<T> {
 }
 
 internal class PropertiesScopeImpl<T> : PropertiesScope<T> {
-    private val propertiesToValidations: MutableMap<KProperty1<T & Any, *>, MutableList<ValidateScope<Any?>>> = mutableMapOf()
+    private val propertiesToValidations: MutableMap<KProperty1<T & Any, *>, MutableList<ValidateScope<Any?>>> by lazy { mutableMapOf() }
 
     @Suppress("UNCHECKED_CAST")
     override fun <P> validate(property: KProperty1<T & Any, P>, validateBlock: ValidateScope<P>.() -> Unit) {
@@ -137,7 +137,7 @@ internal class PropertiesScopeImpl<T> : PropertiesScope<T> {
 }
 
 internal class ValueScopeImpl<T> : ValueScope<T> {
-    private val matchBlocksToDescription: MutableMap<(T) -> Boolean, DescriptionDescriptor> = mutableMapOf()
+    private val matchBlocksToDescription: MutableMap<(T) -> Boolean, DescriptionDescriptor> by lazy { mutableMapOf() }
 
     override fun match(matchBlock: (T) -> Boolean): DescriptionDescriptor {
         return DescriptionDescriptorImpl().also { matchBlocksToDescription[matchBlock] = it }
