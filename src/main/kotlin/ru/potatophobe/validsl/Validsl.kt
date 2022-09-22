@@ -4,16 +4,12 @@ import kotlin.reflect.KProperty1
 
 /**
  * Marks Validsl API components
- *
- * @see ValidateScope
  * */
 @DslMarker
 internal annotation class Validsl
 
 /**
  * Describes validation fault
- *
- * @see ValidationResult
  * */
 interface ValidationFault {
     /**
@@ -38,9 +34,6 @@ interface ValidationFault {
 
 /**
  * Describes validation result
- *
- * @see ValidationFault
- * @see ApplicableValidation
  * */
 @Validsl
 interface ValidationResult<T> {
@@ -60,8 +53,6 @@ interface ValidationResult<T> {
      * @param successBlock block of code to be executed if there are no faults
      *
      * @return this
-     *
-     * @see SuccessScope
      * */
     @Validsl
     infix fun success(successBlock: SuccessScope<T>.() -> Unit): ValidationResult<T>
@@ -72,8 +63,6 @@ interface ValidationResult<T> {
      * @param failBlock block of code to be executed if there are faults
      *
      * @return this
-     *
-     * @see FailScope
      * */
     @Validsl
     infix fun fail(failBlock: FailScope<T>.() -> Unit): ValidationResult<T>
@@ -108,18 +97,17 @@ interface ValidationResult<T> {
 
 /**
  * Validation unit that could be applied
- *
- * @see ValidateScope
  * */
 interface ApplicableValidation<T> {
     /**
      * Apply validation unit to validated value
      *
-     * @return result of validation
+     * @param value value to which validation will be applied
+     * @param path path to property containing this value
      *
-     * @see ValidationResult
+     * @return result of validation
      * */
-    fun apply(): ValidationResult<T>
+    fun applyTo(value: T, path: String): ValidationResult<T>
 }
 
 /**
@@ -130,24 +118,20 @@ interface ApplicableValidation<T> {
 @Validsl
 interface ValidateScope<T> : ApplicableValidation<T> {
     /**
-     * Specifies validation for value properties
-     *
-     * @param propertiesBlock validation definition
-     *
-     * @see PropertiesScope
-     * */
-    @Validsl
-    fun properties(propertiesBlock: PropertiesScope<T>.() -> Unit)
-
-    /**
      * Specifies validation for provided value
      *
      * @param valueBlock validation definition
-     *
-     * @see ValueScope
      * */
     @Validsl
     fun value(valueBlock: ValueScope<T>.() -> Unit)
+
+    /**
+     * Specifies validation for value properties
+     *
+     * @param propertiesBlock validation definition
+     * */
+    @Validsl
+    fun properties(propertiesBlock: PropertiesScope<T>.() -> Unit)
 
     /**
      * Specifies validation for value elements if it is Iterable
@@ -156,6 +140,14 @@ interface ValidateScope<T> : ApplicableValidation<T> {
      * */
     @Validsl
     fun <E> ValidateScope<out Iterable<E>?>.elements(elementsBlock: ValidateScope<E>.() -> Unit)
+
+    /**
+     * Specifies validation for value entries if it is Map
+     *
+     * @param entriesBlock validation definition
+     * */
+    @Validsl
+    fun <K, V> ValidateScope<out Map<K, V>?>.entries(entriesBlock: ValidateScope<Map.Entry<K, V>>.() -> Unit)
 
     /**
      * Specifies validation for value keys if it is Map
@@ -168,16 +160,14 @@ interface ValidateScope<T> : ApplicableValidation<T> {
     /**
      * Specifies validation for value values if it is Map
      *
-     * @param valueBlock validation definition
+     * @param valuesBlock validation definition
      * */
     @Validsl
-    fun <V> ValidateScope<out Map<*, V>?>.values(valueBlock: ValidateScope<V>.() -> Unit)
+    fun <V> ValidateScope<out Map<*, V>?>.values(valuesBlock: ValidateScope<V>.() -> Unit)
 }
 
 /**
  * Defines validation for provided value members
- *
- * @see ValidateScope
  * */
 @Validsl
 interface PropertiesScope<T> : ApplicableValidation<T> {
@@ -193,8 +183,6 @@ interface PropertiesScope<T> : ApplicableValidation<T> {
 
 /**
  * Defines validation for provided value
- *
- * @see ValidateScope
  * */
 @Validsl
 interface ValueScope<T> : ApplicableValidation<T> {
@@ -209,8 +197,6 @@ interface ValueScope<T> : ApplicableValidation<T> {
 
 /**
  * Defines description for specific constraint
- *
- * @see ValueScope
  * */
 @Validsl
 interface DescriptionDescriptor {
@@ -223,8 +209,6 @@ interface DescriptionDescriptor {
 
     /**
      * Specifies description for constraint
-     *
-     * @param description description
      * */
     @Validsl
     infix fun description(description: String)

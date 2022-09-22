@@ -34,10 +34,7 @@ fun processPerson(person: Person?) {
         value { notNull() }
         properties {
             validate(Person::name) {
-                value {
-                    hasLengthIn(3..20)
-                    matchPattern("<someNamePattern>")
-                }
+                value { hasLengthIn(3..20) and matchPattern("<someNamePattern>") }
             }
             validate(Person::phoneNumbers) {
                 value { notEmptyCollection() }
@@ -76,10 +73,7 @@ data class Person(
             value { notNull() }
             properties {
                 validate(Person::name) {
-                    value {
-                        hasLengthIn(3..20)
-                        matchPattern("<someNamePattern>")
-                    }
+                    value { hasLengthIn(3..20) and matchPattern("<someNamePattern>") }
                 }
                 validate(Person::phoneNumbers) {
                     value { notEmptyCollection() }
@@ -129,10 +123,15 @@ and `faults` property that is list of validation faults with 3 properties:
 
 ### Already simple and beautiful, but could be better
 
-You can define aliases for frequent constraints
+You can define aliases for frequent constraints according to convention:
+
+    Aliases starting with `is` specifies that `value` must not be `null`, except `isNull()`
+        other aliases specifies that `null` `value` will pass validation
+    All aliases must return `ru.potatophobe.validsl.MatchAlias` object to support multiple aliases on one line using `and`
+        Example: `{ notNull() and hasLength(10) }`
 
 ```kotlin
-fun <T> ValueScope<T>.isEqualTo(value: T & Any) {
+fun <T> ValueScope<T>.isEqualTo(value: T & Any) = matchAlias {
     match { it == value } description "Must be equal to $value"
 }
 ```
@@ -160,40 +159,36 @@ Most frequent constraints already have aliases
  * Specifies that validated value must be null
  * */
 @Validsl
-fun ValueScope<*>.isNull() {
-    match { it == null } description "Must be null"
-}
+fun ValueScope<*>.isNull() = matchAlias {
+        match { it == null } description "Must be null"
+    }
 
 /**
  * Specifies that validated value must not be null
  * */
 @Validsl
-fun ValueScope<*>.notNull() {
+fun ValueScope<*>.isNotNull() = matchAlias {
     match { it != null } description "Must not be null"
 }
 
 /**
  * Specifies that validated value must not be null and be equal to provided value
- *
- * @param value
  * */
 @Validsl
-fun <T> ValueScope<T>.isEqualTo(value: T & Any) {
+fun <T> ValueScope<T>.isEqualTo(value: T & Any) = matchAlias {
     match { it == value } description "Must be equal to $value"
 }
 
 /**
  * Specifies that validated value must not be null and be equal to one of provided values
- *
- * @param values
  * */
 @Validsl
-fun <T> ValueScope<T>.isOneOf(vararg values: T & Any) {
+fun <T> ValueScope<T>.isOneOf(vararg values: T & Any) = matchAlias {
     match { values.contains(it) } description "Must be one of $values"
 }
 ```
 
-full list in `src/.../MatchAliases.kt`
+full list in `ru.potatophobe.validsl.MatchAliases.kt`
 
 ### Also, you can validate object `properties`
 
@@ -207,9 +202,7 @@ val value: Something // assignment
 validate(value) {
     properties { // object properties validation definition
         validate(Something::property) {
-            value {
-                isEqualTo("something")
-            }
+            value { isEqualTo("something") }
         }
     }
 } success {
@@ -232,9 +225,7 @@ validate(value) {
     properties {
         validate(Something::properties) {
             elements { // object elements validation definition
-                value {
-                    isEqualTo("something")
-                }
+                value { isEqualTo("something") }
             }
         }
     }
@@ -245,7 +236,7 @@ validate(value) {
 }
 ```
 
-### Same for `keys` and `values` if it is a Map
+### Same for `entries`, `keys` and `values` if it is a Map
 
 ```kotlin
 data class Something(
@@ -257,15 +248,14 @@ val value: Something // assignment
 validate(value) {
     properties {
         validate(Something::propertiesMap) {
+            entries {
+                value { mapsKey("key" to "value") }
+            }
             keys { // object keys validation definition
-                value {
-                    isEqualTo("something")
-                }
+                value { isEqualTo("something") }
             }
             values { // object values validation definition
-                value {
-                    isEqualTo("something else")
-                }
+                value { isEqualTo("something else") }
             }
         }
     }

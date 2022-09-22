@@ -14,7 +14,7 @@ class ValidateScopeImplTest {
     @Test
     fun properties() {
         val value = Sample("propertyValue")
-        val validationScopeImpl = ValidateScopeImpl(value, "value")
+        val validationScopeImpl = ValidateScopeImpl<Sample>()
 
         validationScopeImpl.apply {
             properties {
@@ -27,7 +27,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 assertSame(value, this.value)
             } fail {
                 throw Exception()
@@ -45,7 +45,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 throw Exception()
             } fail {
                 assertSame(value, this.value)
@@ -57,7 +57,7 @@ class ValidateScopeImplTest {
     @Test
     fun value() {
         val value = "someValue"
-        val validationScopeImpl = ValidateScopeImpl(value, "value")
+        val validationScopeImpl = ValidateScopeImpl<String>()
 
         validationScopeImpl.apply {
             value {
@@ -66,7 +66,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 assertSame(value, this.value)
             } fail {
                 throw Exception()
@@ -80,7 +80,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 throw Exception()
             } fail {
                 assertSame(value, this.value)
@@ -92,7 +92,7 @@ class ValidateScopeImplTest {
     @Test
     fun elements() {
         val value = listOf("value1", "value2")
-        val validationScopeImpl = ValidateScopeImpl(value, "value")
+        val validationScopeImpl = ValidateScopeImpl<List<String>>()
 
         validationScopeImpl.apply {
             elements {
@@ -103,7 +103,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 assertSame(value, this.value)
             } fail {
                 throw Exception()
@@ -119,7 +119,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 throw Exception()
             } fail {
                 assertSame(value, this.value)
@@ -129,9 +129,48 @@ class ValidateScopeImplTest {
     }
 
     @Test
+    fun entries() {
+        val value = mapOf("key1" to "value", "key2" to "value")
+        val validationScopeImpl = ValidateScopeImpl<Map<String, String>>()
+
+        validationScopeImpl.apply {
+            entries {
+                value {
+                    match { it.key != "key1" || it.value == "value" }
+                }
+            }
+        }
+
+        assertDoesNotThrow {
+            validationScopeImpl.applyTo(value, "value") success {
+                assertSame(value, this.value)
+            } fail {
+                throw Exception()
+            }
+        }
+
+        validationScopeImpl.apply {
+            entries {
+                value {
+                    match { it.key != "key1" || it.value == "value1" }
+                }
+            }
+        }
+
+        assertDoesNotThrow {
+            validationScopeImpl.applyTo(value, "value") success {
+                throw Exception()
+            } fail {
+                assertSame(value, this.value)
+                assertEquals("value.entries[0]", faults.single().path)
+            }
+        }
+    }
+
+    @Test
     fun keys() {
         val value = mapOf("key1" to "value", "key2" to "value")
-        val validationScopeImpl = ValidateScopeImpl(value, "value")
+        val validationScopeImpl = ValidateScopeImpl<Map<String, String>>()
 
         validationScopeImpl.apply {
             keys {
@@ -142,7 +181,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 assertSame(value, this.value)
             } fail {
                 throw Exception()
@@ -158,7 +197,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value")success {
                 throw Exception()
             } fail {
                 assertSame(value, this.value)
@@ -170,7 +209,7 @@ class ValidateScopeImplTest {
     @Test
     fun values() {
         val value = mapOf("key1" to "value1", "key2" to "value2")
-        val validationScopeImpl = ValidateScopeImpl(value, "value")
+        val validationScopeImpl = ValidateScopeImpl<Map<String, String>>()
 
         validationScopeImpl.apply {
             values {
@@ -181,7 +220,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 assertSame(value, this.value)
             } fail {
                 throw Exception()
@@ -197,7 +236,7 @@ class ValidateScopeImplTest {
         }
 
         assertDoesNotThrow {
-            validationScopeImpl.apply() success {
+            validationScopeImpl.applyTo(value, "value") success {
                 throw Exception()
             } fail {
                 assertSame(value, this.value)
