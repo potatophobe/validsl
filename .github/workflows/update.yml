@@ -1,0 +1,33 @@
+name: update
+on:
+  pull_request:
+    tags:
+      - v*
+    branches:
+      - master
+      - develop
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v2
+
+      - id: setup-java
+        name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: adopt
+          java-version: 8
+
+      - id: gradle-test
+        name: Gradle Test
+        run: ./gradlew clean test --info -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }}
