@@ -1,0 +1,59 @@
+name: release
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v2
+
+      - id: setup-java
+        name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: adopt
+          java-version: 8
+
+      - id: gradle-build
+        name: Gradle Build
+        run: ./gradlew clean build --no-daemon -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }}
+
+      - id: fetch-version
+        name: Fetch Version
+        uses: christian-draeger/read-properties@1.0.1
+        with:
+          path: gradle.properties
+          property: projectRevision
+
+      - id: create-tag
+        name: Create Tag
+        uses: mathieudutour/github-tag-action@v6.0
+        with:
+          github_token: ${{ secrets.REMOTE_TOKEN }}
+          default_bump: false
+          default_prerelease_bump: false
+          custom_tag: ${{ steps.fetch-version.outputs.value }}
+
+      - id: create-release
+        name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.create-tag.outputs.new_tag }}
+          token: ${{ secrets.REMOTE_TOKEN }}
+
+      - id: decrypt-secring
+        name: Decrypt Secring
+        run: gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.SECRING_PASSWORD }}" --output secring.gpg secring.gpg.gpg
+
+      - id: gradle-publish
+        name: Gradle Publish
+        run: ./gradlew publish -Psigning.secretKeyRingFile=../secring.gpg -Psigning.keyId=${{ secrets.SIGNING_KEYID }} -Psigning.password=${{ secrets.SIGNING_PASSWORD }} -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }}
+
+      - id: gradle-close-release
+        name: Gradle Close and Release Repository
+        run: ./gradlew closeAndReleaseRepository -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }}
