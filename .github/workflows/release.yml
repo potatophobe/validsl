@@ -52,7 +52,7 @@ jobs:
 
       - id: gradle-publish
         name: Gradle Publish
-        run: ./gradlew publish -Psigning.secretKeyRingFile=../secring.gpg -Psigning.keyId=${{ secrets.SIGNING_KEYID }} -Psigning.password=${{ secrets.SIGNING_PASSWORD }} -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }}
+        run: ./gradlew publish -Psigning.secretKeyRingFile=./secring.gpg -Psigning.keyId=${{ secrets.SIGNING_KEYID }} -Psigning.password=${{ secrets.SIGNING_PASSWORD }} -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }}
 
       - id: gradle-close-release
         name: Gradle Close and Release Repository
