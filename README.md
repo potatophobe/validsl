@@ -1,5 +1,9 @@
 # `Validsl` - type-safe and extensible DSL to validate Kotlin objects
 
+[![Maven Central](https://img.shields.io/badge/Maven%20Central-grey)](https://search.maven.org/search?q=g:ru.potatophobe%20a:validsl)
+
+
+
 ## Getting started
 
 `Gradle`
