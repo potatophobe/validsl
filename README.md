@@ -240,7 +240,7 @@ validate(value) {
 }
 ```
 
-### Same for `entries`, `keys` and `values` if it is a Map
+### Same for `entries`, `keys` and `values` if it is a `Map`
 
 ```kotlin
 data class Something(
